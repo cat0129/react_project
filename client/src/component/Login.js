@@ -8,47 +8,49 @@ function Login() {
   const pwdRef = useRef();
   const navigate = useNavigate();
 
-  useEffect(()=>{
+  useEffect(() => {
     idRef.current.focus();
   }, []);
 
-  async function fnLogin(){
-    // 로그인 버튼 누르면
-    // fnLogin 함수에서 콘솔로 입력한 이메일, 비밀번호 출력
-    // console.log(emailRef.current.value);
-    // console.log(pwdRef.current.value);
-    try{
-      const res = await axios.post("http://localhost:3100/login", 
-        { id : idRef.current.value,
-          pwd : pwdRef.current.value
+  async function fnLogin() {
+    try {
+      const res = await axios.post("http://localhost:3100/user",
+        {
+          id: idRef.current.value,
+          pwd: pwdRef.current.value
         });
-        if(res.data.success){
-          navigate("/main");
-        } else {
-          alert("아이디/비밀번호 다시 확인");
-        }       
-    } catch(err){
+      if (res.data.success) {
+        navigate("/main");
+        alert("로그인성공");
+      } else {
+        alert("아이디/비밀번호 다시 확인");
+      }
+    } catch (err) {
       console.log("오류 발생");
     }
   }
 
   return (
     <Box
+      width="100%"
       display="flex"
       flexDirection="column"
       alignItems="center"
       justifyContent="center"
-      height="100vh"
-      sx={{ backgroundColor: '#f0f4f8', padding: 3 }}
+      height="97%"
+      sx={{
+        backgroundColor: '#fbf6ef',
+        padding: 2
+      }}
     >
-      <Box 
-        sx={{ 
-          width: '100%', 
-          maxWidth: '400px', 
-          padding: '20px',  
-          backgroundColor: '#fff', 
-          boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',  
-          borderRadius: '8px' 
+      <Box
+        sx={{
+          width: '80%',
+          padding: '5%',
+          backgroundColor: 'white',
+          boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
+          borderRadius: '8px',
+          margin: '10px'
         }}
       >
         <Typography variant="h4" mb={3} align="center">

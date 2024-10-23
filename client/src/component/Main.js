@@ -10,7 +10,7 @@ const Main = ()=>{
 
     async function getFeed() {
         try {
-            const res = await axios.get('http://localhost:3000/feed');
+            const res = await axios.get('http://localhost:3000/');
             if(res.data.list.length>0){
                 setFeed(res.data.list);
             }else{
