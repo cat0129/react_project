@@ -54,6 +54,7 @@ const FileUpload = () => {
 
     return (
         <Box sx={{
+            backgroundColor: '#fbf6ef',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
@@ -95,7 +96,7 @@ const FileUpload = () => {
                 flexDirection: 'column',
                 justifyContent: 'center',
                 alignItems: 'center',
-                padding: '20px' // 내부 여백 추가
+                padding: '20px', // 내부 여백 추가
             }}>
                 <form onSubmit={fnUpload} style={{ width: '100%' }}>
                     <div>

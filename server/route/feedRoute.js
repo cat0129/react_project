@@ -81,5 +81,19 @@ router.route("/")
                 });
         });
     });
+
+router.route("/:id")
+    .get((req,res)=>{
+        const id = req.params.id;
+        console.log(id);
+        const query = 'SELECT * FROM TBL_FEED WHERE user_Id=?'
+        connection.query(query, [id], (err, results)=>{
+            if(err){
+                alert("피드 출력 실패")
+            }
+            res.json({success:true, list:results});
+            console.log(query, id);
+        })
+    })
     
 module.exports = router;    

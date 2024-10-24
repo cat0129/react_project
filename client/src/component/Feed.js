@@ -1,19 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Box, Typography, Paper, Alert, Button } from '@mui/material';
-// import FileUpload from './component/FileUpload';
 
-
-const Feed = ()=>{
+const Feed = ({ }) => {
+    const userId = localStorage.getItem('userId');
     const [feed, setFeed] = useState([]);
-    const [error, setError] = useState(true);
+    const [allFeeds, setAllFeeds] = useState([]);
+    const [error, setError] = useState(null); // 초기값을 null로 설정
 
     async function getFeed() {
+        setError(null); // 에러 초기화
+        console.log("id!!!!"+userId);
         try {
-            const res = await axios.get('http://localhost:3000/:id');
-            if(res.data.list.length>0){
+            const res = await axios.get(`http://localhost:3100/feed/${userId}`);
+            if (res.data.list.length > 0) {
                 setFeed(res.data.list);
-            }else{
+            } else {
                 setError("피드가 없음");
             }
         } catch (err) {
@@ -21,9 +23,24 @@ const Feed = ()=>{
         }
     }
 
-    useEffect(()=>{
-        getFeed();
-    }, []);
+    async function getAllFeed() {
+        setError(null);
+        try{
+            const res = await axios.get('http://localhost:3100/feed');
+            if(res.data.list.length>0){
+                setAllFeeds(res.data.list);
+            } else {
+                setError("피드가 없음");
+            }
+        } catch (err) {
+            setError(err.message);
+        }
+    }
+
+    useEffect(() => {
+        getFeed(); // 특정 피드 가져오기
+        getAllFeed();
+    }, [userId]); // id와 feedNo가 변경될 때마다 호출
 
     return (
         <Box
@@ -34,19 +51,21 @@ const Feed = ()=>{
             padding={3}
             sx={{ backgroundColor: '#f0f4f8' }}
         >
-            {feed.map((feed) => (
-                <Paper key={feed.id} sx={{ width: '100%', maxWidth: '600px', mb: 2, p: 2 }}>
+
+            {feed.map((feeds) => (
+                <Paper key={feeds.id} sx={{ width: '100%', maxWidth: '600px', mb: 2, p: 2 }}>
                     <Typography variant="h6" gutterBottom>
-                        {feed.id}
+                        {feeds.user_id}
                     </Typography>
-                    <img src={feed.imgPath} alt="Feed" style={{ width: '100%', height: 'auto', borderRadius: '4px' }} />
+                    {feeds.imgPath && (
+                        <img src={feeds.imgPath} alt="Feed" style={{ width: '100%', height: 'auto', borderRadius: '4px' }} />
+                    )}
                     <Typography variant="body1" gutterBottom>
-                        {feed.content}
+                        {feeds.content}
                     </Typography>
                     <Typography variant="caption" color="textSecondary" gutterBottom>
-                        {new Date(feed.cdatetime).toLocaleString()}
+                        {new Date(feeds.cdatetime).toLocaleString()}
                     </Typography>
-
                     <Box display="flex" justifyContent="space-between" mt={1}>
                         <Box>
                             {/* <FileUpload /> */}

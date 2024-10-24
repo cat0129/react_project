@@ -9,7 +9,7 @@ const ROUND = 10;
 
 router.route("/")
     .get((req,res)=>{
-        const query = 'SELECT * FROM TBL_FEED';
+        const query = 'SELECT * FROM TBL_USER';
         connection.query(query, (err,results)=>{
             if(err){
                 console.log('쿼리 실행 실패', err);
@@ -26,12 +26,10 @@ router.route("/")
             if(results.length>0){
                 const user = results[0];
                 const password = user.pwd;
-                console.log(user);
                 const login = await bcrypt.compare(pwd,password);
-                console.log(login);
                 if(login){
                     const token = jwt.sign({id:user.id}, JWT_KEY, {expiresIn:'1h'});
-                    res.json({ success: true, message : "로그인 성공" });
+                    res.json({ success: true, message : "로그인 성공", id: user.id, token });
                 } else{
                     res.json({ success: false, message: '로그인 실패' });
                   }

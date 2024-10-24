@@ -37,25 +37,22 @@ function Join() {
 
   return (
     <Box
-      width="100%"
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-      justifyContent="center"
-      height="97%"
       sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh', // 세로로 화면 전체를 차지함
         backgroundColor: '#fbf6ef',
-        padding: 2
       }}
     >
       <Box
         sx={{
-          width: '80%',
-          padding: '5%',
-          backgroundColor: 'white',
-          boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
-          borderRadius: '8px',
-          margin: '10px'
+          backgroundColor: '#ffffff', // 내부 박스의 배경색
+          width: '350px', // 고정된 너비
+          height: '60vh', // 화면 전체 높이
+          padding: '20px',
+          borderRadius: '8px', // 모서리를 둥글게
+          boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)'
         }}
       >
         <Typography variant="h4" mb={3} align="center">
