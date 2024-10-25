@@ -36,3 +36,40 @@
     transform: rotate(360deg);
   }
 }
+
+.slick-dots {
+  display: flex; /* Flexbox 사용 */
+  justify-content: center; /* 중앙 정렬 */
+  position: absolute; /* 절대 위치 */
+  bottom: 10px; /* 슬라이더 하단에 위치 */
+  margin: 0; /* 마진 제거 */
+  padding: 0; /* 패딩 제거 */
+  width: 100%; 
+}
+
+.slick-dots li {
+  margin: 0; /* 도트 간격 제거 */
+  position: relative; 
+}
+
+/* 슬라이더 이미지와 도트 간격 제거 */
+.slick-slider {
+  position: relative; /* 슬라이더의 상대 위치 설정 */
+}
+
+.slick-slide {
+  margin: 0; /* 슬라이드 간격 제거 */
+}
+
+.slick-list {
+  padding-bottom: 0; /* 슬라이드 리스트 하단 패딩 제거 */
+}
+
+.button-custom {
+  background-color: #fceedc; /* 버튼 배경 색상 */
+  color: black; /* 버튼 글자 색상 */
+}
+
+.button-custom:hover {
+  background-color: #e3e6ba; /* 호버 시 색상 변경 (선택 사항) */
+}

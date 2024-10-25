@@ -1,19 +1,19 @@
 const jwt = require('jsonwebtoken');
+const JWT_KEY = "secret_key";
 
-const jwtAuthentication = (req,res,next)=>{
-    //next는 feedRoute의 콜백함수 부분(get방식 jwtAuthentication 뒷부분)
-    //jwt.verify();
-    const token = req.headers.token;
-    console.log(req.headers.token);
-    if(!token){
-        return res.json({success:false, message:"로그인해주세요"});
+const jwtAuthentication = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) {
+        return res.status(401).json({ success: false, message: "토큰이 없습니다." });
     }
-    jwt.verify(token, "secret_key", (err,user)=>{
-        if(err){
-            return res.json({success:false, message:"유효하지 않은 토큰"})
+    jwt.verify(token, JWT_KEY, (err, user) => {
+        if (err) {
+            return res.status(403).json({ success: false, message: "유효하지 않은 토큰" });
         }
-        next();
+        req.user = user; // 사용자 정보를 req.user에 저장
+        next(); // 다음 미들웨어로 이동
     });
-}
+};
 
-module.exports = jwtAuthentication;
+module.exports = jwtAuthentication; // 함수로 내보내기

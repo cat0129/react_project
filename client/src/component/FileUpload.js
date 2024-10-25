@@ -9,6 +9,7 @@ const FileUpload = () => {
     const [content, setContent] = useState('');
     const [images, setImages] = useState([]);
     const [previewImages, setPreviewImages] = useState([]);
+    const userId = localStorage.getItem('userId');
 
     const imageChange = (e) => {
         const files = Array.from(e.target.files);
@@ -34,11 +35,17 @@ const FileUpload = () => {
             formData.append('images', image);
         });
 
+        const token = localStorage.getItem('token');
+
         try {
             const response = await axios.post('http://localhost:3100/feed', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
+                headers: { 
+                    'Content-Type': 'multipart/form-data',
+                    'Authorization': `Bearer ${token}`
+                }
             });
             alert(response.data.message);
+            window.location.href=`http://localhost:3000/feed/${userId}`
         } catch (error) {
             console.error('피드 등록 오류:', error);
         }

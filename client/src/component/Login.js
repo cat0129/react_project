@@ -23,7 +23,9 @@ function Login() {
         });
       if (res.data.success) {
         const id = res.data.id;
+        const token = res.data.token;
         localStorage.setItem('userId', id);
+        localStorage.setItem('token', token);
         navigate(`/feed/${id}`);
         alert("로그인성공");
       } else {
