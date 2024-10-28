@@ -102,4 +102,18 @@ router.route("/insert")
         });
     });
 
+router.route("/search")
+    .post(async (req,res)=>{
+        const keyword = req.body.keyword;
+        console.log("!!!!"+keyword);
+        const query = `SELECT * FROM TBL_USER WHERE id LIKE ?`;
+        connection.query(query, [`%${keyword}%`], (err, result)=>{
+            if(err){
+                console.error('사용자 검색 중 오류 발생', err);
+                return res.json({success:false, message:"DB 오류"});
+            }
+            res.json({success:true, message:"검색 성공", result});
+        })
+    })    
+
 module.exports = router;    

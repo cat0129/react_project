@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Box, Typography, Alert, Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import Slider from 'react-slick';
+import Logout from './Logout';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 
 const Feed = () => {
-    const userId = localStorage.getItem('userId');
     const [profileImg, setProfileImg] = useState('');
     const [feed, setFeed] = useState([]);
     const [oneFeed, setOneFeed] = useState(null); // 변경: 단일 피드를 저장할 상태
@@ -14,9 +14,16 @@ const Feed = () => {
     const [open, setOpen] = useState(false); // 모달 상태
     const token = localStorage.getItem('token');
 
+    const getUserIdFromUrl = () => {
+        const url = window.location.href; // 현재 URL 가져오기
+        const pathParts = url.split('/'); // 슬래시로 나누기
+        return pathParts[pathParts.length - 1]; // 마지막 부분이 userId
+    };
+
+    const userId = getUserIdFromUrl();
+
     async function getFeed() {
         setError(null);
-        console.log("!!!!"+userId);
         try {
             const res = await axios.get(`http://localhost:3100/feed/${userId}`, {
                 headers: { Authorization: `Bearer ${token}` }
@@ -33,6 +40,7 @@ const Feed = () => {
             console.error('Error fetching feed:', err);
         }
     }
+
 
     useEffect(() => {
         getFeed();
@@ -68,14 +76,15 @@ const Feed = () => {
     const getOneFeed = async (feedNo) => {
         try {
             const res = await axios.get(`http://localhost:3100/feed/${userId}/${feedNo}`, {
-                headers: { Authorization: `Bearer ${token}` } // 헤더에 인증 토큰 추가
+                headers: { Authorization: `Bearer ${token}` }
             });
             if (res.data.success) {
-                const fetchedFeed = res.data.result;
-                if (fetchedFeed && fetchedFeed.length > 0) {
-                    setOneFeed(fetchedFeed[0]);
-                    setOpen(true);
-                    console.log("불러오기 성공", fetchedFeed[0]);
+                if (res.data.imgPaths) {
+                    setOneFeed({
+                        imgPaths: res.data.imgPaths,
+                        feed_no: feedNo
+                    });
+                    setOpen(true); // 모달을 여는 부분
                 } else {
                     console.error("피드를 찾을 수 없습니다.");
                 }
@@ -86,18 +95,18 @@ const Feed = () => {
             console.error("API 요청 중 오류 발생:", err);
         }
     };
-    
-    
+
     const handleImageClick = (feedNo) => {
         getOneFeed(feedNo); 
     };
+
     const handleClose = () => {
         setOpen(false); // 모달 닫기
         setOneFeed(null); // 피드 내용 초기화
     };
 
-
     const fnDelete = async (feedNo) => {
+        console.log("~!!!!!" + feedNo);
         if (!window.confirm("삭제하시겠습니까?")) {
             return;
         }
@@ -116,10 +125,9 @@ const Feed = () => {
             alert("오류발생: " + err.message);
         }
     };
-    
 
     return (
-        <Box sx={{ display: 'flex', height: '100vh' }}>
+        <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
             {/* 세로 툴바 */}
             <Box 
                 sx={{ 
@@ -132,11 +140,12 @@ const Feed = () => {
                     height: '100vh' 
                 }}
             >
-                <Button color="inherit">홈</Button>
-                <Button color="inherit">검색</Button>
+                <Button color="inherit" href="http://localhost:3000/">홈</Button>
+                <Button color="inherit" href="http://localhost:3000/search">검색</Button>
                 <Button color="inherit">알림</Button>
                 <Button color="inherit" href="http://localhost:3000/upload">추가</Button>
-                <Button color="inherit">설정</Button>
+                <Logout>로그아웃</Logout>
+                <Button color="inherit" href={`http://localhost:3000/info/${userId}`}>설정</Button>
             </Box>
 
             {/* 메인 피드 영역 */}
@@ -146,7 +155,9 @@ const Feed = () => {
                 display: 'flex', 
                 flexDirection: 'column', 
                 alignItems: 'center', // 중앙 정렬
-                justifyContent: 'center' // 중앙 정렬
+                justifyContent: 'flex-start', // 상단 정렬
+                overflowY: 'auto', // 세로 스크롤 가능
+                height: '100vh' // 전체 화면 높이 설정
             }}>
                 {error && <Alert severity="error">{error}</Alert>}
                 
@@ -156,7 +167,9 @@ const Feed = () => {
                     alignItems: 'center', 
                     width: '100%', 
                     maxWidth: '1000px', 
-                    height: '200px' 
+                    height: '200px',
+                    marginBottom: '50px',
+                    marginTop: '60px'
                 }}>
                     <img 
                         src={`http://localhost:3100/${profileImg}`} 
@@ -182,7 +195,8 @@ const Feed = () => {
                     justifyContent: 'center', 
                     width: '100%', 
                     maxWidth: '1000px',
-                    marginTop: '20px' // 상단 여백 추가
+                    marginTop: '20px', // 상단 여백 추가
+                    marginBottom: '100px'
                 }}>
                     {Object.entries(groupedFeed).map(([feedNo, images]) => (
                         <Box key={feedNo} sx={{ width: '300px', height: '300px' }}>
@@ -213,30 +227,39 @@ const Feed = () => {
                 {/* 단일 피드 모달 */}
                 <Dialog open={open} onClose={handleClose}>
                     <DialogTitle>피드 내용</DialogTitle>
-                    <DialogContent>
+                    <DialogContent sx={{ height: '70vh', overflow: 'hidden' }}>
                         {oneFeed ? ( // oneFeed가 null이 아닐 때만 렌더링
                             <>
                                 <Typography>{oneFeed.content}</Typography>
-                                <img 
-                                    src={`http://localhost:3100/${oneFeed.img_path}`} // 올바른 img_path 사용
-                                    alt="Selected Feed"
-                                    style={{
-                                        width: '100%', 
-                                        height: 'auto', 
-                                        borderRadius: '4px', 
-                                        marginTop: '10px'
-                                    }} 
-                                />
+                                <Slider {...settings} style={{ marginTop: '10px', borderRadius: '4px' }}>
+                                    {/* 이미지 경로가 여러 개인 경우 */}
+                                    {oneFeed.imgPaths && oneFeed.imgPaths.length > 0 ? (
+                                        oneFeed.imgPaths.map((imgPath, index) => (
+                                            <div key={index}>
+                                                <img 
+                                                    src={`http://localhost:3100/${imgPath}`} // 올바른 img_path 사용
+                                                    alt={`Selected Feed ${index + 1}`}
+                                                    style={{
+                                                        width: '100%', 
+                                                        height: '100%', 
+                                                        objectFit: 'cover' 
+                                                    }} 
+                                                />
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <Typography>이미지가 없습니다.</Typography>
+                                    )}
+                                </Slider>
+                                <Button onClick={() => fnDelete(oneFeed.feed_no)}>삭제</Button>
                             </>
                         ) : (
-                            <Typography>로딩 중...</Typography> // 로딩 상태 표시
+                            <Typography>피드가 없습니다.</Typography>
                         )}
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={() => fnDelete(oneFeed.feed_no)}>삭제</Button> {/* feedNo 전달 */}
-                        <Button onClick={handleClose} color="primary">닫기</Button>
+                        <Button onClick={handleClose}>닫기</Button>
                     </DialogActions>
-
                 </Dialog>
             </Box>
         </Box>

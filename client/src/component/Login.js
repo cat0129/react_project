@@ -9,8 +9,18 @@ function Login() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    idRef.current.focus();
-  }, []);
+    // 로컬 스토리지에서 사용자 ID와 토큰 확인
+    const userId = localStorage.getItem('userId');
+    const token = localStorage.getItem('token');
+
+    if (userId && token) {
+      // 로그인된 상태이면 피드 페이지로 리디렉션
+      navigate(`/feed/${userId}`);
+    } else {
+      // 로그인되지 않은 경우 ID 입력란에 포커스
+      idRef.current.focus();
+    }
+  }, [navigate]);
 
   async function fnLogin() {
     const id = idRef.current.value;

@@ -23,7 +23,7 @@ const Info = () => {
 
     async function getInfo(userId) {
         try {
-            const res = await axios.get(`http://localhost:3100/user/${userId}`);
+            const res = await axios.get(`http://localhost:3100/user/info/${userId}`);
             if (res.data.success) {
                 const userInfo = res.data.userInfo; 
                 setUser(userInfo); // 사용자 정보를 상태에 설정

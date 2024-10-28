@@ -10,6 +10,7 @@ const FileUpload = () => {
     const [images, setImages] = useState([]);
     const [previewImages, setPreviewImages] = useState([]);
     const userId = localStorage.getItem('userId');
+    const token = localStorage.getItem('token');
 
     const imageChange = (e) => {
         const files = Array.from(e.target.files);
@@ -29,13 +30,17 @@ const FileUpload = () => {
 
     const fnUpload = async (e) => {
         e.preventDefault();
+
+        if (!userId) {
+            alert("로그인 정보가 없습니다.");
+            return;
+        }
+
         const formData = new FormData();
         formData.append('content', content);
         images.forEach((image) => {
             formData.append('images', image);
         });
-
-        const token = localStorage.getItem('token');
 
         try {
             const response = await axios.post('http://localhost:3100/feed', formData, {

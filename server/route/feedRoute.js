@@ -47,6 +47,9 @@ router.route("/")
     .post(upload.array('images'), (req, res) => {
         const { content } = req.body;
         const userId = req.userId;
+        if(req.userId==localStorage.getItem('userId')){
+            
+        }
         // 피드 먼저 등록
         const feedQuery = 'INSERT INTO TBL_FEED (user_id, content) VALUES (?, ?)';
         
@@ -97,7 +100,7 @@ router.route("/")
 
 router.route("/:id")
     .get((req,res)=>{
-        const userId = req.userId;
+        const userId = req.params.id;
         console.log(userId);
         const query = 'SELECT f.*, i.*, u.profile_img_path FROM tbl_feed f INNER JOIN tbl_feed_img i ON f.feed_no = i.feed_no INNER JOIN tbl_user u ON i.user_id=u.id WHERE f.user_id=?' 
         connection.query(query, [userId], (err, results)=>{
@@ -108,10 +111,33 @@ router.route("/:id")
             console.log(query, userId);
         })
     })
+
+    
+ 
+router.route("/:id/:feedNo")
+    .get((req, res) => {
+        const userId = req.params.id; // URL에서 userId 가져오기
+        const feedNo = req.params.feedNo; // URL에서 feedNo 가져오기
+        const query = 'SELECT F.*, I.img_path FROM TBL_FEED F INNER JOIN TBL_FEED_IMG I ON F.FEED_NO = I.FEED_NO WHERE f.user_id=? AND f.feed_no=?';
+        connection.query(query, [userId, feedNo], (err, result) => {
+            if (err) {
+                console.error("피드 소환 실패", err);
+                return res.json({ success: false, message: "피드 소환 실패" });
+            }
+            if (result.length > 0) {
+                const imgPaths = result.map(item=>item.img_path);
+                const feedContent = result[0];
+                res.json({ success: true, message: "피드 소환 성공", imgPaths, feedContent });
+            } else {
+                res.json({ success: false, message: "피드를 찾을 수 없습니다." });
+            }
+        });
+
+    })
     .delete((req,res)=>{
         const userId = req.userId; // req.userId 사용
-        const { feedNo } = req.params; // feedNo는 URL 파라미터에서 가져오기
-        console.log("*****"+userId, feedNo);
+        const feedNo = req.params.feedNo; // feedNo는 URL 파라미터에서 가져오기
+        console.log("*****"+userId, req.params);
         const query1 = 'DELETE FROM TBL_FEED_IMG WHERE feed_no=? AND user_id=?';
         const query2 = 'DELETE FROM TBL_FEED WHERE feed_no=? AND user_id=?';
     
@@ -130,27 +156,6 @@ router.route("/:id")
             });
         });
     })
-    
- 
-router.route("/:id/:feedNo")
-    .get((req, res) => {
-        const { userId } = req; // req.userId가 설정되어 있음
-        const { feedNo } = req.params; // URL 매개변수에서 feedNo 가져오기
-        const query = 'SELECT * FROM TBL_FEED F INNER JOIN TBL_FEED_IMG I ON F.FEED_NO = I.FEED_NO WHERE f.user_id=? AND f.feed_no=?';
-        
-        connection.query(query, [userId, feedNo], (err, result) => {
-            if (err) {
-                console.error("피드 소환 실패", err);
-                return res.json({ success: false, message: "피드 소환 실패" });
-            }
-            // result가 null이 아닌지, 그리고 배열인지 확인
-            if (result.length > 0) {
-                res.json({ success: true, message: "피드 소환 성공", result: result });
-            } else {
-                res.json({ success: false, message: "피드를 찾을 수 없습니다." });
-            }
-        });
-    });
 
 
-module.exports = router;    
+module.exports = router;
