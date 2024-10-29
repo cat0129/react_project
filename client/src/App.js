@@ -11,6 +11,7 @@ import Main from './component/Main';
 import Info from './component/Info';
 import FileUpload from './component/FileUpload';
 import Search from './component/Search';
+import Menu from './component/Menu';
 import './App.css';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
@@ -36,6 +37,7 @@ const theme = createTheme({
 });
 
 function App(){
+  
   return (
     <ThemeProvider theme={theme}> {/* ThemeProvider로 테마 적용 */}
       <CssBaseline /> {/* 기본 CSS 리셋 */}
@@ -48,7 +50,7 @@ function App(){
           <Route path="/feed" element={<Feed />} />
           <Route path="/feed/:id" element={<Feed />} />
           <Route path="/upload" element={<FileUpload />} />
-          <Route path="/info/:id" element={<Info />} />
+          <Route path="/user/:id" element={<Info />} />
           <Route path="/search" element={<Search />} />
         </Routes>
       </Router>

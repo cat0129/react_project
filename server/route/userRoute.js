@@ -84,6 +84,16 @@ router.route("/:id")
             }
             res.json({success:true, message:"업데이트 성공"});
         });
+    })
+    .delete((req,res)=>{
+        const userId = req.params.id;
+        const query = 'DELETE FROM TBL_USER WHERE id=?'
+        connection.query(query, [userId], (err, result)=>{
+            if(err){
+                return res.json({success:false, message:"DB 오류"});
+            }
+            res.json({success:true, message:"회원 정보 삭제 성공"})
+        })
     });
   
 router.route("/insert")

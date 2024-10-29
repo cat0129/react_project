@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Box, Typography, Alert, Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import Slider from 'react-slick';
 import Logout from './Logout';
+import Menu from './Menu';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 
@@ -129,25 +130,7 @@ const Feed = () => {
     return (
         <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
             {/* 세로 툴바 */}
-            <Box 
-                sx={{ 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    alignItems: 'flex-start', 
-                    width: '150px', 
-                    padding: '10px', 
-                    backgroundColor: '#f0f0f0', 
-                    height: '100vh' 
-                }}
-            >
-                <Button color="inherit" href="http://localhost:3000/">홈</Button>
-                <Button color="inherit" href="http://localhost:3000/search">검색</Button>
-                <Button color="inherit">알림</Button>
-                <Button color="inherit" href="http://localhost:3000/upload">추가</Button>
-                <Logout>로그아웃</Logout>
-                <Button color="inherit" href={`http://localhost:3000/info/${userId}`}>설정</Button>
-            </Box>
-
+           <Menu></Menu>
             {/* 메인 피드 영역 */}
             <Box sx={{ 
                 flexGrow: 1, 
