@@ -126,4 +126,81 @@ router.route("/search")
         })
     })    
 
+router.route("/follow")
+    .get(async (req,res)=>{
+        const userId = req.body;
+        const query = 'SELECT * FROM TBL_FOLLOW WHERE user_id=?'
+        connection.query(query, [userId], (err, result)=>{
+            if(err){
+                return res.json({success:false, message:"DB 오류"})
+            }
+            res.json({success:true, message:"팔로우 조회 성공"})
+        })
+    })
+    .post(async (req,res)=>{
+        const { userId, followId } = req.body;
+        const checkFollowQuery = 'SELECT * FROM TBL_FOLLOW WHERE user_id=? AND follow_id=?';
+        connection.query(checkFollowQuery, [userId, followId], (err, results) => {
+            if (err) {
+                return res.json({ success: false, message: "DB 오류" });
+            }
+            // 이미 팔로우 중인 경우
+            if (results.length > 0) {
+                return res.json({ success: false, message: "이미 팔로우 중입니다." });
+            }
+
+            // 팔로우 추가
+            const query = 'INSERT INTO TBL_FOLLOW (user_id, follow_id, follow_date) VALUES (?, ?, CURRENT_TIMESTAMP)';
+            console.log(followId, userId);
+            connection.query(query, [userId, followId], (err, result) => {
+                if (err) {
+                    return res.json({ success: false, message: "DB 오류" });
+                }
+                res.json({ success: true, message: "팔로우 성공" });
+            });
+        });
+    })
+    .delete(async (req,res)=>{
+        const { userId, followId } = req.body;
+        const query = 'DELETE FROM TBL_FOLLOW WHERE user_id=? AND follow_id=?'
+        connection.query(query, [userId, followId], (err, result)=>{
+            if(err){
+                return res.json({success:false, message:"DB오류"})
+            }
+            return res.json({success:true, message:"언팔로우 성공"})
+        })
+    })
+
+
+router.route("/following")
+    .post(async (req, res) => {
+        const { userId, followId } = req.body; // 쿼리 파라미터에서 userId와 followId를 가져옴
+        const query = 'SELECT * FROM TBL_FOLLOW WHERE user_id = ? AND follow_id = ?';
+        console.log("user/follow"+userId, followId)
+        connection.query(query, [userId, followId], (err, result) => {
+            if (err) {
+                return res.json({ success: false, message: "DB 오류" });
+            }
+            // 조건부로 isFollowing 값을 설정
+            const isFollowing = result.length > 0;
+            console.log("이즈팔로잉"+isFollowing);
+            res.json({ success: true, isFollowing });
+        });
+});
+ 
+
+router.route("/followCount")
+    .post(async (req,res)=>{
+        const userId = req.body.userId;
+        const query = 'SELECT COUNT(*) AS followCount FROM TBL_FOLLOW WHERE user_id = ?';
+        connection.query(query, [userId], (err, result)=>{
+            if(err){
+                return res.json({success:false, message:"DB오류"})
+            }
+            const followCount = result[0].followCount;
+            res.json({success:true, message:"조회 성공", followCount})
+        })
+    })
+
+
 module.exports = router;    

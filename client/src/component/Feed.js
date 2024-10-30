@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { Box, Typography, Alert, Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import Slider from 'react-slick';
@@ -13,23 +13,29 @@ const Feed = () => {
     const [oneFeed, setOneFeed] = useState(null); // 변경: 단일 피드를 저장할 상태
     const [error, setError] = useState(null);
     const [open, setOpen] = useState(false); // 모달 상태
+    const [isFollowing, setIsFollowing] = useState(false);
+    const [followCount, setFollowCount] = useState(0);
+    const [comments, setComments] = useState([]);
     const token = localStorage.getItem('token');
+    const localUserId = localStorage.getItem('userId');
+    const comment = useRef('');
 
     const getUserIdFromUrl = () => {
         const url = window.location.href; // 현재 URL 가져오기
         const pathParts = url.split('/'); // 슬래시로 나누기
-        return pathParts[pathParts.length - 1]; // 마지막 부분이 userId
+        const userId = pathParts[pathParts.length - 1]; // 마지막 부분이 userId
+        return userId;
     };
 
     const userId = getUserIdFromUrl();
 
     async function getFeed() {
+        console.log("아이디!"+userId)
         setError(null);
         try {
             const res = await axios.get(`http://localhost:3100/feed/${userId}`, {
-                headers: { Authorization: `Bearer ${token}` }
+                headers: { Authorization: `Bearer ${token}` } 
             });
-            console.log('Response Data:', res.data);
             if (res.data && res.data.list && res.data.list.length > 0) {
                 setFeed(res.data.list);
                 setProfileImg(res.data.list[0].profile_img_path);
@@ -41,11 +47,6 @@ const Feed = () => {
             console.error('Error fetching feed:', err);
         }
     }
-
-
-    useEffect(() => {
-        getFeed();
-    }, [userId]);
 
     const settings = {
         dots: true,
@@ -83,7 +84,8 @@ const Feed = () => {
                 if (res.data.imgPaths) {
                     setOneFeed({
                         imgPaths: res.data.imgPaths,
-                        feed_no: feedNo
+                        feed_no: feedNo,
+                        content : res.data.feedContent
                     });
                     setOpen(true); // 모달을 여는 부분
                 } else {
@@ -127,6 +129,111 @@ const Feed = () => {
         }
     };
 
+    async function fnFollow() {
+        try {
+            const res = await axios.post('http://localhost:3100/user/follow', {
+                userId: localUserId,
+                followId: userId,
+            });
+    
+            if (res.data.success) {
+                setIsFollowing(true); // 팔로우 성공 시 상태 업데이트
+            }
+        } catch (err) {
+            setError(err.message);
+        }
+    }
+
+    async function fnUnfollow() {
+        try{
+            const res = await axios.delete('http://localhost:3100/user/follow', {
+                userId : localUserId,
+                followId : userId
+            })
+            if(res.data.success){
+                setIsFollowing(false);
+            }
+        } catch (err) {
+            setError(err.message)
+        }
+    }
+    
+    async function checkIfFollowing() {
+        console.log("팔로잉여부"+isFollowing)
+        try {
+            const res = await axios.post('http://localhost:3100/user/following', {
+                    userId: localUserId,
+                    followId: userId,
+                },
+            )
+    
+            if (res.data.success) {
+                setIsFollowing(res.data.isFollowing); // 서버에서 팔로우 상태를 받아 업데이트
+            }
+        } catch (err) {
+            setError(err.message);
+        }
+    }
+
+    async function getFollowCount() {
+
+        try {
+            const res = await axios.post('http://localhost:3100/user/followCount', {
+                    userId: userId 
+            });
+
+            if (res.data.success) {
+                setFollowCount(res.data.followCount); // 상태 업데이트
+            }
+        } catch (err) {
+            setError(err.message);
+        }
+    }
+
+    const fnComment = async ()=>{
+        if(!comment){
+            alert("댓글을 입력하세요");
+            return;
+        }
+        try{
+            const res = await axios.post(`http://localhost:3100/feed/${oneFeed.feed_no}/comment`, {
+                userId : localUserId,
+                comment : comment
+            })
+            if(res.data.success){
+                getComment(oneFeed.feed_no);
+            }else{
+                alert("댓글 작성 실패")
+            }
+        } catch (err) {
+            alert("오류 발생"+err.message)
+        }
+    }
+
+    const getComment = async ()=>{
+        console.log("피드넘버"+oneFeed.feed_no)
+        try {
+            const res = await axios.get(`http://localhost:3100/feed/${oneFeed.feed_no}/comments`, {
+                userId : localUserId
+            });
+            if (res.data.success) {
+                setComments(res.data.comments);
+            }
+        } catch (err) {
+            console.error("코멘트를 불러오는 중 오류 발생:", err);
+        }
+    }
+
+    useEffect(() => {
+        getFeed();
+        checkIfFollowing();
+        getFollowCount();
+    }, [userId, localUserId]);
+    
+    useEffect(() => {
+        if (oneFeed) getComment();
+    }, [oneFeed]);
+
     return (
         <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
             {/* 세로 툴바 */}
@@ -165,8 +272,20 @@ const Feed = () => {
                         }}
                     />
                     <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                        <Typography>{userId}</Typography> {/* 사용자 ID */} 
-                        <Button color="inherit" href={`http://localhost:3000/user/${userId}`}>프로필 수정</Button>
+                        <Typography>{userId}</Typography> {/* 사용자 ID */}
+                        {userId==localUserId && (
+        
+                            <Button color="inherit" href={`http://localhost:3000/user/${userId}`}>프로필 수정</Button>
+                        )}
+                        {userId !== localUserId && ( // 팔로우 버튼 표시 조건
+                            <>
+                                <Button color="inherit" onClick={isFollowing ? fnUnfollow : fnFollow}>
+                                    {isFollowing ? '언팔로우' : '팔로우'}
+                                </Button>
+                            </>
+                        )}
+                        <Typography>팔로우 {followCount}</Typography>
+                        <Typography>팔로워</Typography>
                     </Box>
                 </Box>
 
@@ -209,11 +328,10 @@ const Feed = () => {
 
                 {/* 단일 피드 모달 */}
                 <Dialog open={open} onClose={handleClose}>
-                    <DialogTitle>피드 내용</DialogTitle>
+                    {/* <DialogTitle>피드 내용</DialogTitle> */}
                     <DialogContent sx={{ height: '70vh', overflow: 'hidden' }}>
                         {oneFeed ? ( // oneFeed가 null이 아닐 때만 렌더링
                             <>
-                                <Typography>{oneFeed.content}</Typography>
                                 <Slider {...settings} style={{ marginTop: '10px', borderRadius: '4px' }}>
                                     {/* 이미지 경로가 여러 개인 경우 */}
                                     {oneFeed.imgPaths && oneFeed.imgPaths.length > 0 ? (
@@ -234,10 +352,40 @@ const Feed = () => {
                                         <Typography>이미지가 없습니다.</Typography>
                                     )}
                                 </Slider>
+                                <Typography>{oneFeed.content}</Typography>
                                 <Button onClick={() => fnDelete(oneFeed.feed_no)}>삭제</Button>
+                                {/* 댓글 리스트 */}
+                                <Box sx={{ marginTop: '20px' }}>
+                                    <Typography variant="h6">댓글</Typography>
+                                    {comments.length > 0 ? (
+                                        comments.map((comment, index) => (
+                                            <Box key={index} sx={{ padding: '10px', border: '1px solid #ccc', borderRadius: '4px', marginBottom: '5px' }}>
+                                                <Typography variant="body2"><strong>{comment.userId}</strong>: {comment.comment}</Typography>
+                                            </Box>
+                                        ))
+                                    ) : (
+                                        <Typography>댓글이 없습니다.</Typography>
+                                    )}
+                                    {/* 댓글 입력 */}
+                                    <Box sx={{ display: 'flex', marginTop: '10px' }}>
+                                        <input
+                                            type="text"
+                                            ref={comment}
+                                            placeholder="댓글을 입력하세요"
+                                            style={{
+                                                flexGrow: 1,
+                                                padding: '10px',
+                                                borderRadius: '4px',
+                                                border: '1px solid #ccc',
+                                                marginRight: '10px'
+                                            }}
+                                        />
+                                        <Button variant="contained" onClick={fnComment}>등록</Button>
+                                    </Box>
+                                </Box>
                             </>
                         ) : (
-                            <Typography>피드가 없습니다.</Typography>
+                            <Typography>피드 내용을 불러오는 중입니다...</Typography>
                         )}
                     </DialogContent>
                     <DialogActions>

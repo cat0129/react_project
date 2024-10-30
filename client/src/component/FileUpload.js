@@ -47,7 +47,8 @@ const FileUpload = () => {
             const response = await axios.post('http://localhost:3100/feed', formData, {
                 headers: { 
                     'Content-Type': 'multipart/form-data',
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${token}`,
+                    'User-Id': userId
                 }
             });
             alert(response.data.message);

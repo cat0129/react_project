@@ -46,9 +46,9 @@ router.route("/")
     })
     .post(upload.array('images'), (req, res) => {
         const { content } = req.body;
-        const userId = req.userId;
-        if(req.userId==localStorage.getItem('userId')){
-            
+        const userId = req.headers['user-id'];
+        if (!userId) {
+            return res.status(401).json({ success: false, message: "유효하지 않은 사용자" });
         }
         // 피드 먼저 등록
         const feedQuery = 'INSERT INTO TBL_FEED (user_id, content) VALUES (?, ?)';
@@ -98,19 +98,19 @@ router.route("/")
         });
     });
 
-router.route("/:id")
-    .get((req,res)=>{
-        const userId = req.params.id;
-        console.log(userId);
-        const query = 'SELECT f.*, i.*, u.profile_img_path FROM tbl_feed f INNER JOIN tbl_feed_img i ON f.feed_no = i.feed_no INNER JOIN tbl_user u ON i.user_id=u.id WHERE f.user_id=?' 
-        connection.query(query, [userId], (err, results)=>{
-            if(err){
-                alert("피드 출력 실패")
+router.route("/:id") 
+    .get((req, res) => {
+        const userId = req.params.id; 
+        const query = 'SELECT f.*, i.*, u.profile_img_path FROM tbl_feed f INNER JOIN tbl_feed_img i ON f.feed_no = i.feed_no INNER JOIN tbl_user u ON i.user_id=u.id WHERE f.user_id=?';
+        connection.query(query, [userId], (err, results) => {
+            if (err) {
+                console.error("피드 출력 실패:", err);
+                return res.status(500).json({ success: false, message: "피드 출력 실패" });
             }
-            res.json({success:true, list:results});
-            console.log(query, userId);
-        })
-    })
+            res.json({ success: true, list: results });
+        });
+    });
+
 
     
  
@@ -126,7 +126,8 @@ router.route("/:id/:feedNo")
             }
             if (result.length > 0) {
                 const imgPaths = result.map(item=>item.img_path);
-                const feedContent = result[0];
+                const feedContent = result[0].content;
+                console.log("피드컨텐트"+feedContent.content);
                 res.json({ success: true, message: "피드 소환 성공", imgPaths, feedContent });
             } else {
                 res.json({ success: false, message: "피드를 찾을 수 없습니다." });
@@ -156,6 +157,28 @@ router.route("/:id/:feedNo")
             });
         });
     })
+
+router.route("/:feedNo/comment")
+    .post((req, res) => {
+        const userId = req.userId; // 토큰에서 가져온 사용자 ID
+        const feedNo = req.params.feedNo; // URL 파라미터로부터 feedNo
+        const { comment } = req.body; // 요청 본문에서 댓글 내용 가져오기
+
+        if (!comment || comment.trim() === '') {
+            return res.status(400).json({ success: false, message: "댓글 내용이 필요합니다." });
+        }
+        const query = 'INSERT INTO tbl_comment (user_id, feed_no, comment, cdatetime, comment_userId) VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?)';
+
+        connection.query(query, [userId, feedNo, comment, cdatetime], (err, result) => {
+            if (err) {
+                console.error('댓글 추가 실패:', err);
+                return res.json({ success: false, message: "댓글 추가 실패" });
+            }
+            res.json({ success: true, message: "댓글이 성공적으로 추가되었습니다." });
+        });
+    });
+
+module.exports = router;
 
 
 module.exports = router;
