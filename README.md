@@ -1,4 +1,4 @@
-<img src="react_project/server/img/1730084072310.jpg" width="400">
+<img src="C:\Users\TJ-BU-708-P00\react_project\react_project\server\img\1730084072310.jpg" width="400">
 
 
 ### <SNS 제작 프로젝트>
